@@ -276,7 +276,7 @@ onAuthStateChanged(auth, (user)=>{
 });
 
 function initDb(uid){
-  mealsRef=ref(db,'meals');
+  mealsRef=ref(db,'users/'+uid+'/meals');
   setSyncStatus('syncing','接続中...');
   unsubscribe=onValue(mealsRef,(snapshot)=>{
     meals=snapshot.val()||{};
@@ -301,7 +301,7 @@ async function saveMealToDb(key,data){
   if(!currentUser)return;
   setSyncStatus('syncing','保存中...');
   try{
-    await set(ref(db,'meals/'+key),data);
+    await set(ref(db,'users/'+currentUser.uid+'/meals/'+key),data);
     setSyncStatus('ok','同期済み');
   }catch(e){setSyncStatus('error','保存失敗');console.error(e);}
 }
@@ -310,7 +310,7 @@ async function deleteMealFromDb(key){
   if(!currentUser)return;
   setSyncStatus('syncing','削除中...');
   try{
-    await remove(ref(db,'meals/'+key));
+    await remove(ref(db,'users/'+currentUser.uid+'/meals/'+key));
     setSyncStatus('ok','同期済み');
   }catch(e){setSyncStatus('error','削除失敗');console.error(e);}
 }
