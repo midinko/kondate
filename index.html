@@ -23,13 +23,31 @@
 }
 body{font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif;background:var(--bg-tertiary);color:var(--text-primary);min-height:100vh;padding:1.25rem 1rem}
 .container{max-width:820px;margin:0 auto}
+
+/* ログイン画面 */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:80vh}
+.login-box{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem 2rem;text-align:center;max-width:340px;width:100%}
+.login-title{font-size:22px;font-weight:600;margin-bottom:8px}
+.login-sub{font-size:13px;color:var(--text-secondary);margin-bottom:2rem;line-height:1.6}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 20px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-md);font-size:14px;font-weight:500;cursor:pointer;color:#3c4043;transition:all 0.15s;font-family:inherit}
+.google-btn:hover{background:#f8f8f8;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+.google-btn img{width:20px;height:20px}
+
+/* アプリ画面 */
+#appScreen{display:none}
 .app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px}
 .app-title{font-size:19px;font-weight:600;display:flex;align-items:center;gap:7px}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sync-status{font-size:11px;padding:3px 10px;border-radius:20px;display:flex;align-items:center;gap:5px;transition:all 0.3s}
 .sync-status.ok{background:#E1F5EE;color:#0F6E56}
 .sync-status.syncing{background:#FEF9E7;color:#854F0B}
 .sync-status.error{background:#FEF2F2;color:#B91C1C}
 .sync-status.offline{background:var(--bg-secondary);color:var(--text-tertiary)}
+.user-info{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary)}
+.user-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.logout-btn{background:transparent;border:0.5px solid var(--border);border-radius:var(--radius-md);padding:4px 10px;font-size:12px;cursor:pointer;color:var(--text-secondary);font-family:inherit;transition:all 0.15s}
+.logout-btn:hover{background:var(--bg-secondary)}
+
 .tabs{display:flex;gap:5px;margin-bottom:1.25rem;flex-wrap:wrap}
 .tab{padding:7px 14px;border-radius:var(--radius-md);border:0.5px solid var(--border);background:var(--bg);color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
 .tab:hover{background:var(--bg-secondary)}
@@ -105,77 +123,97 @@ textarea:focus{border-color:var(--accent)}
 .import-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .import-note{font-size:12px;color:var(--text-tertiary);margin-top:10px;line-height:1.7}
 .import-week-label{font-size:11px;font-weight:500;color:var(--text-secondary);margin:10px 0 5px;padding-bottom:4px;border-bottom:0.5px solid var(--border)}
-.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;z-index:100}
-.loading-box{background:var(--bg);border-radius:var(--radius-lg);padding:1.5rem 2rem;font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,0.12)}
-.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:9px 18px;border-radius:var(--radius-md);font-size:13px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="app-header">
-    <div class="app-title"><span>🍽️</span> 献立カレンダー</div>
-    <div class="sync-status offline" id="syncStatus"><i class="ti ti-cloud" style="font-size:12px"></i><span id="syncText">接続中...</span></div>
-  </div>
-  <div class="tabs">
-    <button class="tab active" id="tab-calendar" onclick="showTab('calendar')"><i class="ti ti-calendar" style="font-size:13px"></i>カレンダー</button>
-    <button class="tab" id="tab-search" onclick="showTab('search')"><i class="ti ti-search" style="font-size:13px"></i>検索</button>
-    <button class="tab" id="tab-history" onclick="showTab('history')"><i class="ti ti-history" style="font-size:13px"></i>振り返り</button>
-    <button class="tab" id="tab-import" onclick="showTab('import')"><i class="ti ti-file-import" style="font-size:13px"></i>インポート</button>
-  </div>
 
-  <div id="calendarView">
-    <div class="week-nav">
-      <button class="nav-btn" onclick="shiftWeeks(-4)"><i class="ti ti-chevrons-left"></i></button>
-      <button class="nav-btn" onclick="shiftWeeks(-1)"><i class="ti ti-chevron-left"></i></button>
-      <span class="week-range-label" id="weekRangeLabel"></span>
-      <button class="nav-btn" onclick="shiftWeeks(1)"><i class="ti ti-chevron-right"></i></button>
-      <button class="nav-btn" onclick="shiftWeeks(4)"><i class="ti ti-chevrons-right"></i></button>
-      <button class="nav-btn" onclick="goToday()" title="今週に戻る"><i class="ti ti-home" style="font-size:13px"></i></button>
-    </div>
-    <div id="editPanelContainer"></div>
-    <div class="scroll-cal" id="scrollCal"></div>
+<!-- ログイン画面 -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-title">🍽️ 献立カレンダー</div>
+    <div class="login-sub">Googleアカウントでログインして<br>献立を管理しましょう</div>
+    <button class="google-btn" onclick="loginWithGoogle()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Googleでログイン
+    </button>
   </div>
+</div>
 
-  <div id="searchView" style="display:none">
-    <div class="panel">
-      <div class="panel-title"><i class="ti ti-search" style="color:var(--accent)"></i>料理名で検索</div>
-      <input type="text" id="searchInput" placeholder="料理名を入力（例：チキン、パスタ…）" oninput="doSearch()" style="width:100%">
-      <div class="search-results" id="searchResults"><div class="empty-msg">キーワードを入力すると過去の料理を探せます</div></div>
-    </div>
-  </div>
-
-  <div id="historyView" style="display:none">
-    <div class="panel">
-      <div class="panel-title" style="justify-content:space-between">
-        <span><i class="ti ti-history" style="color:var(--accent)"></i> 過去の献立</span>
-        <span class="count-badge" id="totalCount"></span>
+<!-- アプリ画面 -->
+<div id="appScreen">
+  <div class="container">
+    <div class="app-header">
+      <div class="app-title"><span>🍽️</span> 献立カレンダー</div>
+      <div class="header-right">
+        <div class="sync-status offline" id="syncStatus"><i class="ti ti-cloud" style="font-size:12px"></i><span id="syncText">接続中...</span></div>
+        <div class="user-info">
+          <img class="user-avatar" id="userAvatar" src="" alt="">
+          <span id="userName"></span>
+        </div>
+        <button class="logout-btn" onclick="logoutUser()">ログアウト</button>
       </div>
-      <div id="historyList"></div>
     </div>
-  </div>
+    <div class="tabs">
+      <button class="tab active" id="tab-calendar" onclick="showTab('calendar')"><i class="ti ti-calendar" style="font-size:13px"></i>カレンダー</button>
+      <button class="tab" id="tab-search" onclick="showTab('search')"><i class="ti ti-search" style="font-size:13px"></i>検索</button>
+      <button class="tab" id="tab-history" onclick="showTab('history')"><i class="ti ti-history" style="font-size:13px"></i>振り返り</button>
+      <button class="tab" id="tab-import" onclick="showTab('import')"><i class="ti ti-file-import" style="font-size:13px"></i>インポート</button>
+    </div>
 
-  <div id="importView" style="display:none">
-    <div class="panel">
-      <div class="panel-title"><i class="ti ti-file-import" style="color:var(--accent)"></i>メモから一括インポート</div>
-      <textarea id="importText" rows="10" placeholder="iPhoneのメモをそのまま貼り付け&#10;&#10;・一番上が今週、下に行くほど古い週として自動で日付を割り当てます&#10;・週の区切りは2行以上の空行でOK&#10;&#10;例：&#10;月 グリーンカレー ゆで卵&#10;火 パスタ サラダ&#10;&#10;&#10;月 肉じゃが 味噌汁&#10;水 チャーハン" oninput="previewImport()"></textarea>
-      <div class="import-note">・一番上の週＝今週として自動で日付を割り当て、下に行くほど1週ずつ遡ります<br>・複数のおかずはまとめて1行として保存されます<br>・記録のない曜日はスキップされます<br>・すでに登録済みの日は上書きになります（URLは保持）</div>
-      <div class="import-preview" id="importPreview"></div>
-      <div class="import-actions" id="importActions" style="display:none">
-        <button class="save-btn" onclick="doImport()"><i class="ti ti-check" style="font-size:13px"></i> インポート実行</button>
-        <button class="cancel-btn" onclick="clearImport()">クリア</button>
+    <div id="calendarView">
+      <div class="week-nav">
+        <button class="nav-btn" onclick="shiftWeeks(-4)"><i class="ti ti-chevrons-left"></i></button>
+        <button class="nav-btn" onclick="shiftWeeks(-1)"><i class="ti ti-chevron-left"></i></button>
+        <span class="week-range-label" id="weekRangeLabel"></span>
+        <button class="nav-btn" onclick="shiftWeeks(1)"><i class="ti ti-chevron-right"></i></button>
+        <button class="nav-btn" onclick="shiftWeeks(4)"><i class="ti ti-chevrons-right"></i></button>
+        <button class="nav-btn" onclick="goToday()" title="今週に戻る"><i class="ti ti-home" style="font-size:13px"></i></button>
+      </div>
+      <div id="editPanelContainer"></div>
+      <div class="scroll-cal" id="scrollCal"></div>
+    </div>
+
+    <div id="searchView" style="display:none">
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-search" style="color:var(--accent)"></i>料理名で検索</div>
+        <input type="text" id="searchInput" placeholder="料理名を入力（例：チキン、パスタ…）" oninput="doSearch()" style="width:100%">
+        <div class="search-results" id="searchResults"><div class="empty-msg">キーワードを入力すると過去の料理を探せます</div></div>
+      </div>
+    </div>
+
+    <div id="historyView" style="display:none">
+      <div class="panel">
+        <div class="panel-title" style="justify-content:space-between">
+          <span><i class="ti ti-history" style="color:var(--accent)"></i> 過去の献立</span>
+          <span class="count-badge" id="totalCount"></span>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+    <div id="importView" style="display:none">
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-file-import" style="color:var(--accent)"></i>メモから一括インポート</div>
+        <textarea id="importText" rows="10" placeholder="iPhoneのメモをそのまま貼り付け&#10;&#10;・一番上が今週、下に行くほど古い週として自動で日付を割り当てます&#10;・週の区切りは2行以上の空行でOK&#10;&#10;例：&#10;月 グリーンカレー ゆで卵&#10;火 パスタ サラダ&#10;&#10;&#10;月 肉じゃが 味噌汁&#10;水 チャーハン" oninput="previewImport()"></textarea>
+        <div class="import-note">・一番上の週＝今週として自動で日付を割り当て、下に行くほど1週ずつ遡ります<br>・複数のおかずはまとめて1行として保存されます<br>・記録のない曜日はスキップされます<br>・すでに登録済みの日は上書きになります（URLは保持）</div>
+        <div class="import-preview" id="importPreview"></div>
+        <div class="import-actions" id="importActions" style="display:none">
+          <button class="save-btn" onclick="doImport()"><i class="ti ti-check" style="font-size:13px"></i> インポート実行</button>
+          <button class="cancel-btn" onclick="clearImport()">クリア</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBO53ilQ5eHYMr5OW6fzz9Bx1WHw06IvkA",
@@ -188,77 +226,105 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getDatabase(app);
-const mealsRef = ref(db, 'meals');
+const provider = new GoogleAuthProvider();
 
 const DAYS=['月','火','水','木','金'];
 const DAY_MAP={月:0,火:1,水:2,木:3,金:4};
 const VISIBLE_WEEKS=4;
-
 let meals={};
 let weekOffset=0;
 let selectedDate=null;
 let activeTab='calendar';
-let dbReady=false;
+let currentUser=null;
+let mealsRef=null;
+let unsubscribe=null;
 
-function setSyncStatus(state, text){
-  const el=document.getElementById('syncStatus');
-  const tx=document.getElementById('syncText');
-  el.className='sync-status '+state;
-  tx.textContent=text;
-}
+// ── 認証 ──
+window.loginWithGoogle = async function(){
+  try{
+    await signInWithPopup(auth, provider);
+  }catch(e){
+    console.error(e);
+    showToast('ログインに失敗しました');
+  }
+};
 
-// Firebaseからリアルタイム同期
-onValue(mealsRef, (snapshot)=>{
-  meals = snapshot.val() || {};
-  dbReady=true;
-  setSyncStatus('ok','同期済み');
-  if(activeTab==='calendar') renderCalendar();
-  if(activeTab==='history') renderHistory();
-  if(activeTab==='search') doSearch();
-}, (error)=>{
-  setSyncStatus('error','接続エラー');
-  console.error(error);
+window.logoutUser = async function(){
+  if(!confirm('ログアウトしますか？'))return;
+  if(unsubscribe)unsubscribe();
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    currentUser=user;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('appScreen').style.display='block';
+    document.getElementById('userName').textContent=user.displayName||user.email;
+    document.getElementById('userAvatar').src=user.photoURL||'';
+    document.getElementById('userAvatar').style.display=user.photoURL?'block':'none';
+    initDb(user.uid);
+  }else{
+    currentUser=null;
+    if(unsubscribe)unsubscribe();
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('appScreen').style.display='none';
+    meals={};
+  }
 });
 
-// 1件保存
-window._saveMealToDb = async function(key, data){
+function initDb(uid){
+  mealsRef=ref(db,'users/'+uid+'/meals');
+  setSyncStatus('syncing','接続中...');
+  unsubscribe=onValue(mealsRef,(snapshot)=>{
+    meals=snapshot.val()||{};
+    setSyncStatus('ok','同期済み');
+    if(activeTab==='calendar')renderCalendar();
+    if(activeTab==='history')renderHistory();
+    if(activeTab==='search')doSearch();
+  },(error)=>{
+    setSyncStatus('error','接続エラー');
+    console.error(error);
+  });
+}
+
+// ── DB操作 ──
+function setSyncStatus(state,text){
+  const el=document.getElementById('syncStatus');
+  el.className='sync-status '+state;
+  document.getElementById('syncText').textContent=text;
+}
+
+async function saveMealToDb(key,data){
+  if(!currentUser)return;
   setSyncStatus('syncing','保存中...');
   try{
-    await set(ref(db,'meals/'+key), data);
+    await set(ref(db,'users/'+currentUser.uid+'/meals/'+key),data);
     setSyncStatus('ok','同期済み');
-  }catch(e){
-    setSyncStatus('error','保存失敗');
-    console.error(e);
-  }
-};
+  }catch(e){setSyncStatus('error','保存失敗');console.error(e);}
+}
 
-// 1件削除
-window._deleteMealFromDb = async function(key){
+async function deleteMealFromDb(key){
+  if(!currentUser)return;
   setSyncStatus('syncing','削除中...');
   try{
-    await remove(ref(db,'meals/'+key));
+    await remove(ref(db,'users/'+currentUser.uid+'/meals/'+key));
     setSyncStatus('ok','同期済み');
-  }catch(e){
-    setSyncStatus('error','削除失敗');
-    console.error(e);
-  }
-};
+  }catch(e){setSyncStatus('error','削除失敗');console.error(e);}
+}
 
-// 複数件一括保存
-window._bulkSaveToDb = async function(data){
+async function bulkSaveToDb(data){
+  if(!currentUser)return;
   setSyncStatus('syncing','保存中...');
   try{
     const updates={};
-    Object.entries(data).forEach(([k,v])=>{ updates['meals/'+k]=v; });
-    const {update} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-    await update(ref(db), updates);
+    Object.entries(data).forEach(([k,v])=>{updates['users/'+currentUser.uid+'/meals/'+k]=v;});
+    await update(ref(db),updates);
     setSyncStatus('ok','同期済み');
-  }catch(e){
-    setSyncStatus('error','保存失敗');
-    console.error(e);
-  }
-};
+  }catch(e){setSyncStatus('error','保存失敗');console.error(e);}
+}
 
 // ── ユーティリティ ──
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -267,13 +333,16 @@ function showToast(msg){
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2200);
 }
-function getMonday(d){
-  const dt=new Date(d);const day=dt.getDay();
-  dt.setDate(dt.getDate()+(day===0?-6:1-day));dt.setHours(0,0,0,0);return dt;
+function d(dateStr){return new Date(dateStr+'T00:00:00')}
+function getMonday(dt){
+  const day=dt.getDay();
+  const diff=(day===0?-6:1-day);
+  const mon=new Date(dt.getTime()+diff*86400000);
+  mon.setHours(0,0,0,0);return mon;
 }
-function dateKey(d){return d.toISOString().split('T')[0]}
-function fmtShort(d){return (d.getMonth()+1)+'/'+d.getDate()}
-function fmtFull(d){return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日('+DAYS[(d.getDay()+6)%7]+')'}
+function dateKey(dt){return dt.toISOString().split('T')[0]}
+function fmtShort(dt){return (dt.getMonth()+1)+'/'+dt.getDate()}
+function fmtFull(dt){return dt.getFullYear()+'年'+(dt.getMonth()+1)+'月'+dt.getDate()+'日('+DAYS[(dt.getDay()+6)%7]+')'}
 function getMealObj(key){
   const v=meals[key];
   if(!v)return{meal:'',url:''};
@@ -286,30 +355,27 @@ function trimUrl(url){
 }
 
 // ── カレンダー ──
-function shiftWeeks(n){weekOffset+=n;renderCalendar()}
-function goToday(){weekOffset=0;renderCalendar()}
-window.shiftWeeks=shiftWeeks;window.goToday=goToday;
+window.shiftWeeks=function(n){weekOffset+=n;renderCalendar()};
+window.goToday=function(){weekOffset=0;renderCalendar()};
 
 function renderCalendar(){
-  const today=new Date();const todayKey=dateKey(today);
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayKey=dateKey(today);
   const thisMonday=getMonday(today);
-  const centerMonday=new Date(thisMonday);
-  centerMonday.setDate(centerMonday.getDate()+weekOffset*7);
-  const startMonday=new Date(centerMonday);
-  startMonday.setDate(startMonday.getDate()-Math.floor(VISIBLE_WEEKS/2)*7);
-  const endDate=new Date(startMonday);
-  endDate.setDate(endDate.getDate()+VISIBLE_WEEKS*7-1);
+  const centerMonday=new Date(thisMonday.getTime()+weekOffset*7*86400000);
+  const startMonday=new Date(centerMonday.getTime()-Math.floor(VISIBLE_WEEKS/2)*7*86400000);
+  const endDate=new Date(startMonday.getTime()+(VISIBLE_WEEKS*7-1)*86400000);
   document.getElementById('weekRangeLabel').textContent=fmtShort(startMonday)+'〜'+fmtShort(endDate);
 
   const cal=document.getElementById('scrollCal');cal.innerHTML='';
   for(let w=VISIBLE_WEEKS-1;w>=0;w--){
-    const mon=new Date(startMonday);mon.setDate(mon.getDate()+w*7);
-    const fri=new Date(mon);fri.setDate(fri.getDate()+4);
+    const mon=new Date(startMonday.getTime()+w*7*86400000);
+    const fri=new Date(mon.getTime()+4*86400000);
     const isThisWeek=dateKey(mon)===dateKey(thisMonday);
     const block=document.createElement('div');block.className='week-block';
     block.innerHTML=`<div class="week-header">${fmtShort(mon)}（月）〜 ${fmtShort(fri)}（金）${isThisWeek?' ★ 今週':''}</div>`;
-    for(let d=0;d<5;d++){
-      const day=new Date(mon);day.setDate(day.getDate()+d);
+    for(let i=0;i<5;i++){
+      const day=new Date(mon.getTime()+i*86400000);
       const key=dateKey(day);
       const {meal,url}=getMealObj(key);
       const isToday=key===todayKey;
@@ -317,11 +383,11 @@ function renderCalendar(){
       const row=document.createElement('div');
       row.className='day-row'+(isToday?' today-row':'');
       if(isSel)row.style.background='var(--accent-light)';
-      let mealHtml=meal
+      const mealHtml=meal
         ?`<div class="meal-text">${esc(meal)}</div>`+(url?`<a class="meal-url" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="ti ti-link"></i>${esc(trimUrl(url))}</a>`:'')
         :`<div class="meal-empty">タップして入力</div>`;
       row.innerHTML=
-        `<div class="day-cell"><div class="day-label">${DAYS[d]}</div><div class="day-date">${fmtShort(day)}</div></div>`+
+        `<div class="day-cell"><div class="day-label">${DAYS[i]}</div><div class="day-date">${fmtShort(day)}</div></div>`+
         `<div class="meal-cell" onclick="openEdit('${key}')">${mealHtml}</div>`+
         `<div class="edit-cell"><button class="edit-icon-btn" onclick="openEdit('${key}')" title="編集"><i class="ti ${meal?'ti-edit':'ti-plus'}"></i></button></div>`;
       block.appendChild(row);
@@ -331,20 +397,19 @@ function renderCalendar(){
   renderEditPanel();
 }
 
-function openEdit(key){
+window.openEdit=function(key){
   selectedDate=key;renderCalendar();
   document.getElementById('editPanelContainer').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-window.openEdit=openEdit;
+};
 
 function renderEditPanel(){
   const container=document.getElementById('editPanelContainer');
   if(!selectedDate){container.innerHTML='';return;}
-  const d=new Date(selectedDate);
+  const dt=d(selectedDate);
   const {meal,url}=getMealObj(selectedDate);
   container.innerHTML=
     `<div class="edit-panel">`+
-    `<div class="edit-panel-title"><i class="ti ti-pencil" style="color:var(--accent)"></i>${fmtFull(d)} の夕食</div>`+
+    `<div class="edit-panel-title"><i class="ti ti-pencil" style="color:var(--accent)"></i>${fmtFull(dt)} の夕食</div>`+
     `<div class="field-group"><div class="field-label">料理名</div><input type="text" id="mealInput" placeholder="料理名を入力…" value="${esc(meal)}" onkeydown="if(event.key==='Enter')document.getElementById('urlInput').focus()"></div>`+
     `<div class="field-group"><div class="field-label">参考レシピURL（任意）</div><input type="url" id="urlInput" placeholder="https://www.youtube.com/..." value="${esc(url)}" onkeydown="if(event.key==='Enter')saveMeal()"></div>`+
     `<div class="form-row"><button class="save-btn" onclick="saveMeal()"><i class="ti ti-check" style="font-size:13px"></i>保存</button><button class="cancel-btn" onclick="cancelEdit()">閉じる</button>${meal?`<button class="del-btn" onclick="deleteMealEntry('${selectedDate}')"><i class="ti ti-trash" style="font-size:13px"></i>削除</button>`:''}</div>`+
@@ -352,45 +417,38 @@ function renderEditPanel(){
   setTimeout(()=>{const i=document.getElementById('mealInput');if(i){i.focus();if(meal)i.select()}},30);
 }
 
-async function saveMeal(){
+window.saveMeal=async function(){
   const mealVal=(document.getElementById('mealInput').value||'').trim();
   const urlVal=(document.getElementById('urlInput').value||'').trim();
-  const key=selectedDate;
-  selectedDate=null;
-  if(mealVal){
-    await window._saveMealToDb(key,{meal:mealVal,url:urlVal});
-  }else{
-    await window._deleteMealFromDb(key);
-  }
+  const key=selectedDate;selectedDate=null;
+  if(mealVal) await saveMealToDb(key,{meal:mealVal,url:urlVal});
+  else await deleteMealFromDb(key);
   showToast(mealVal?'保存しました ✓':'削除しました');
-}
-window.saveMeal=saveMeal;
+};
 
-async function deleteMealEntry(key){
-  if(!confirm(fmtFull(new Date(key))+'の記録を削除しますか？'))return;
+window.deleteMealEntry=async function(key){
+  if(!confirm(fmtFull(d(key))+'の記録を削除しますか？'))return;
   selectedDate=null;
-  await window._deleteMealFromDb(key);
+  await deleteMealFromDb(key);
   showToast('削除しました');
-}
-window.deleteMealEntry=deleteMealEntry;
+};
 
-function cancelEdit(){
+window.cancelEdit=function(){
   selectedDate=null;
   document.getElementById('editPanelContainer').innerHTML='';
   renderCalendar();
-}
-window.cancelEdit=cancelEdit;
+};
 
 // ── 検索 ──
 function doSearch(){
   const q=(document.getElementById('searchInput').value||'').trim();
   const box=document.getElementById('searchResults');
   if(!q){box.innerHTML='<div class="empty-msg">キーワードを入力すると過去の料理を探せます</div>';return;}
-  const results=Object.entries(meals).filter(([k,v])=>{const m=typeof v==='string'?v:(v.meal||'');return m.includes(q)}).sort((a,b)=>b[0].localeCompare(a[0]));
+  const results=Object.entries(meals).filter(([k,v])=>{const m=typeof v==='string'?v:(v.meal||'');return m.includes(q);}).sort((a,b)=>b[0].localeCompare(a[0]));
   if(!results.length){box.innerHTML=`<div class="empty-msg">「${esc(q)}」の記録が見つかりません</div>`;return;}
   box.innerHTML=results.map(([k,v])=>{
     const {meal,url}=getMealObj(k);
-    return `<div class="result-item"><div class="result-meal">${esc(meal)}</div><div class="result-date">${fmtFull(new Date(k))}</div>${url?`<a class="result-url" href="${esc(url)}" target="_blank" rel="noopener"><i class="ti ti-link"></i>${esc(trimUrl(url))}</a>`:''}</div>`;
+    return `<div class="result-item"><div class="result-meal">${esc(meal)}</div><div class="result-date">${fmtFull(d(k))}</div>${url?`<a class="result-url" href="${esc(url)}" target="_blank" rel="noopener"><i class="ti ti-link"></i>${esc(trimUrl(url))}</a>`:''}</div>`;
   }).join('');
 }
 window.doSearch=doSearch;
@@ -402,40 +460,40 @@ function renderHistory(){
   document.getElementById('totalCount').textContent='合計 '+keys.length+' 件';
   if(!keys.length){list.innerHTML='<div class="empty-msg">まだ記録がありません</div>';return;}
   const byWeek={};
-  keys.forEach(k=>{const wk=dateKey(getMonday(new Date(k)));if(!byWeek[wk])byWeek[wk]=[];byWeek[wk].push(k);});
+  keys.forEach(k=>{const wk=dateKey(getMonday(d(k)));if(!byWeek[wk])byWeek[wk]=[];byWeek[wk].push(k);});
   list.innerHTML=Object.keys(byWeek).sort((a,b)=>b.localeCompare(a)).map(wk=>{
-    const wDate=new Date(wk);const wEnd=new Date(wk);wEnd.setDate(wEnd.getDate()+4);
+    const wDate=d(wk);const wEnd=new Date(wDate.getTime()+4*86400000);
     return `<div><div class="history-week-label">${fmtShort(wDate)} 〜 ${fmtShort(wEnd)}</div>`+
       byWeek[wk].sort().map(k=>{
-        const d=new Date(k);const {meal,url}=getMealObj(k);
+        const dt=d(k);const {meal,url}=getMealObj(k);
         return `<div class="history-row">`+
-          `<span class="history-day">${DAYS[(d.getDay()+6)%7]} ${fmtShort(d)}</span>`+
+          `<span class="history-day">${DAYS[(dt.getDay()+6)%7]} ${fmtShort(dt)}</span>`+
           `<div class="history-content"><span class="history-meal">${esc(meal)}</span>${url?`<a class="history-url" href="${esc(url)}" target="_blank" rel="noopener"><i class="ti ti-link"></i>${esc(trimUrl(url))}</a>`:''}</div>`+
           `<button class="delete-btn" onclick="deleteMealHistory('${k}')" title="削除"><i class="ti ti-trash"></i></button></div>`;
       }).join('')+`</div>`;
   }).join('');
 }
 
-async function deleteMealHistory(key){
-  if(!confirm(fmtFull(new Date(key))+'の記録を削除しますか？'))return;
-  await window._deleteMealFromDb(key);
-  showToast('削除しました');
-}
-window.deleteMealHistory=deleteMealHistory;
+window.deleteMealHistory=async function(key){
+  if(!confirm(fmtFull(d(key))+'の記録を削除しますか？'))return;
+  await deleteMealFromDb(key);showToast('削除しました');
+};
 
 // ── インポート ──
 function splitWeeks(text){return text.split(/\n{2,}/).map(b=>b.trim()).filter(b=>b)}
+
 function parseImportText(){
   const text=document.getElementById('importText').value;
   if(!text.trim())return[];
-  const thisMonday=getMonday(new Date());
+  const today=new Date();today.setHours(0,0,0,0);
+  const thisMonday=getMonday(today);
   return splitWeeks(text).flatMap((block,i)=>{
-    const weekMonday=new Date(thisMonday.getTime()-i*7*24*60*60*1000);
+    const weekMs=thisMonday.getTime()-i*7*86400000;
     return block.split('\n').map(l=>l.trim()).filter(l=>l).flatMap(line=>{
       const m=line.match(/^([月火水木金])\s+(.+)/);
       if(!m)return[];
-      const d=new Date(weekMonday.getTime()+DAY_MAP[m[1]]*24*60*60*1000);
-      const key=dateKey(d);
+      const dt=new Date(weekMs+DAY_MAP[m[1]]*86400000);
+      const key=dateKey(dt);
       const existing=getMealObj(key);
       return [{key,weekIndex:i,meal:m[2].trim(),existingUrl:existing.url,exists:!!existing.meal}];
     });
@@ -450,36 +508,35 @@ function previewImport(){
   const byWeek={};
   rows.forEach(r=>{if(!byWeek[r.weekIndex])byWeek[r.weekIndex]=[];byWeek[r.weekIndex].push(r);});
   let html=`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">${Object.keys(byWeek).length}週分・${rows.length}件を検出</div>`;
-  Object.keys(byWeek).sort((a,b)=>a-b).forEach(wi=>{
+  Object.keys(byWeek).sort((a,b)=>+a-+b).forEach(wi=>{
     const wr=byWeek[wi];
-    const mon=getMonday(new Date(wr[0].key));const end=new Date(mon);end.setDate(end.getDate()+4);
+    const mon=getMonday(d(wr[0].key));
+    const fri=new Date(mon.getTime()+4*86400000);
     const label=wi=='0'?'今週':wi=='1'?'先週':`${wi}週前`;
-    html+=`<div class="import-week-label">${label}（${fmtShort(mon)}〜${fmtShort(end)}）</div>`;
-    html+=wr.map(r=>`<div class="preview-row ${r.exists?'warn':'ok'}"><span class="preview-date">${fmtFull(new Date(r.key))}</span><span class="preview-meal">${esc(r.meal)}</span><span class="preview-badge ${r.exists?'badge-over':'badge-new'}">${r.exists?'上書き':'新規'}</span></div>`).join('');
+    html+=`<div class="import-week-label">${label}（${fmtShort(mon)}〜${fmtShort(fri)}）</div>`;
+    html+=wr.map(r=>`<div class="preview-row ${r.exists?'warn':'ok'}"><span class="preview-date">${fmtFull(d(r.key))}</span><span class="preview-meal">${esc(r.meal)}</span><span class="preview-badge ${r.exists?'badge-over':'badge-new'}">${r.exists?'上書き':'新規'}</span></div>`).join('');
   });
   preview.innerHTML=html;actions.style.display='flex';
 }
 window.previewImport=previewImport;
 
-async function doImport(){
+window.doImport=async function(){
   const rows=parseImportText();if(!rows.length)return;
   const data={};
   rows.forEach(r=>{data[r.key]={meal:r.meal,url:r.existingUrl||''};});
-  await window._bulkSaveToDb(data);
+  await bulkSaveToDb(data);
   showToast(rows.length+'件をインポートしました ✓');
   clearImport();
-}
-window.doImport=doImport;
+};
 
-function clearImport(){
+window.clearImport=function(){
   document.getElementById('importText').value='';
   document.getElementById('importPreview').innerHTML='';
   document.getElementById('importActions').style.display='none';
-}
-window.clearImport=clearImport;
+};
 
-// ── タブ切り替え ──
-function showTab(name){
+// ── タブ ──
+window.showTab=function(name){
   ['calendar','search','history','import'].forEach(t=>{
     document.getElementById(t+'View').style.display=t===name?'block':'none';
     document.getElementById('tab-'+t).classList.toggle('active',t===name);
@@ -488,13 +545,7 @@ function showTab(name){
   if(name==='calendar')renderCalendar();
   if(name==='history')renderHistory();
   if(name==='search'){const i=document.getElementById('searchInput');i.value='';doSearch();setTimeout(()=>i.focus(),50);}
-}
-window.showTab=showTab;
-
-// 初期表示
-setSyncStatus('syncing','接続中...');
-renderCalendar();
-
+};
 </script>
 </body>
 </html>
